@@ -13,27 +13,43 @@ const GameBoard = (function() {
         }
     };
 
+
     const getBoard = function () {
-        gameString
+        return gameString;
     };
 
     const dropToken = (row, column, player) => {
-        if (gameString[row][column] === 0) {
-            gameString.addToken(player);
+        if (gameString[row][column].getValue() === 0) {
+            gameString[row][column].addToken(player)
         }
     };
+
+
 
     const printBoard = () => {
         const boardWithCellValues = gameString.map((row) => row.map((cell) => cell.getValue()))
         console.log(boardWithCellValues);
-      };
+    };
+
+    const initBoard = () => {
+        for (i=0; i<row ; i++) {
+            gameString[i] = [];
+            for (j=0; j<column ; j++) {
+                gameString[i].push(Cell());
+            }
+        };
+    };
+
 
     return {
         getBoard,
         dropToken,
-        printBoard
+        printBoard,
+        initBoard
     }
 })()
+
+
 
 function Cell() {
     let value = 0;
@@ -48,68 +64,98 @@ function Cell() {
       addToken,
       getValue
     };
-  }
-
-/*let turn = 0;
-
-function render() {
-    console.log(gameString);
 }
 
-function init() {
-    gameString = [[".",".","."],[".",".","."],[".",".","."]];
-    turn = 0;
-}
 
-function checkWin() {
-    let winner = 0;
-    for (let i = 0; i < 3 ; i++) {
-        if (gameString[i][0] != "." && gameString[i][0]==gameString[i][1] && gameString[i][0]==gameString[i][2]){
-            winner = gameString[i][0];
-            init();
-            return console.log("winner is " + winner)
+const GameController = (function() {
+    playerOneName = "Player One";
+    playerTwoName = "Player Two";
+
+    const board = GameBoard;
+  
+    const players = [
+      {
+        name: playerOneName,
+        token: 1
+      },
+      {
+        name: playerTwoName,
+        token: 2
+      }
+    ];
+
+    let activePlayer = players[0];
+  
+    const switchPlayerTurn = () => {
+      activePlayer = activePlayer === players[0] ? players[1] : players[0];
+    };
+    const getActivePlayer = () => activePlayer;
+  
+    const printNewRound = () => {
+      board.printBoard();
+      console.log(`${getActivePlayer().name}'s turn.`);
+    };
+
+    const checkEmpty = (row,column) => {
+        return board.getBoard()[row][column].getValue() === 0;
+    }
+
+    const checkWin = () => {
+        const winComb = [
+            [[0,0],[0,1],[0,2]],
+            [[1,0],[1,1],[1,2]],
+            [[2,0],[2,1],[2,2]],
+            [[0,0],[1,0],[2,0]],
+            [[0,1],[1,1],[2,1]],
+            [[0,2],[1,2],[2,2]],
+            [[0,0],[1,1],[2,2]],
+            [[0,2],[1,1],[2,0]],
+        ]
+
+        for (i=0 ; i<winComb.length ; i++){
+            let boxValues = [];
+            for (j=0; j<3 ; j++){
+                boxValues.push(board.getBoard()[winComb[i][j][0]][winComb[i][j][1]].getValue())
+            }
+            if (boxValues[0] === boxValues[1] && boxValues[0] === boxValues[2] && boxValues[0] !== 0) {
+                return true;
+            }
         }
-        if (gameString[0][i] != "." && gameString[0][i]==gameString[1][i] && gameString[0][i]==gameString[2][i]){
-            winner = gameString[0][i];
-            init();
-            return console.log("winner is " + winner)
+
+    }
+
+
+    const playRound = (row,column) => {
+        if (checkEmpty(row,column)) {
+            console.log(
+            `Dropping ${getActivePlayer().name}'s token`
+            );
+            board.dropToken(row, column, getActivePlayer().token);
+
+            if (checkWin()) {
+                console.log (`${getActivePlayer().name} wins !`)
+                board.printBoard()
+                board.initBoard()
+                activePlayer = players[0];
+            }
+            else {
+                switchPlayerTurn();
+                printNewRound();
+            }
+
         }
-    }
+        else {
+            console.log("You can't play here!")
+        }
+    };
 
-    if (gameString[0][0] != "." && gameString[0][0]==gameString[1][1] && gameString[0][0]==gameString[2][2]){
-        winner = gameString[0][0];
-        init();
-        return console.log("winner is " + winner)
-    }
-    if (gameString[0][2] != "." && gameString[0][2]==gameString[1][1] && gameString[0][2]==gameString[2][0]){
-        winner = gameString[0][2];
-        init();
-        return console.log("winner is " + winner)
-    }
-    if (turn == 9) {
-        init();
-        return console.log("It's a tie!")
-    }
+    printNewRound();
+  
+    return {
+      playRound,
+      getActivePlayer
+    };
 
-}
+})()
 
-function addInput(i,j) {
-    if ( turn % 2 == 0 && gameString[i][j] == "."){
-        gameString[i][j] = "X";
-        turn ++;
-        render();
-        checkWin();
-    }
-    else if (gameString[i][j] == "."){
-        gameString[i][j] = "O";
-        turn ++;
-        render();
-        checkWin();
-    }
-}
-
-
-const players = (function () {
-    function player () {
-    }
-})()*/
+const game = GameController;
