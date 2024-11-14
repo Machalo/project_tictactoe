@@ -87,15 +87,18 @@ const GameController = (function() {
     let activePlayer = players[0];
     let turn = 0;
     let gameEnd = false;
+    
   
     const switchPlayerTurn = () => {
-      activePlayer = activePlayer === players[0] ? players[1] : players[0];
+        activePlayer = activePlayer === players[0] ? players[1] : players[0];
     };
     const getActivePlayer = () => activePlayer;
+
+    let textToShow = "";
   
     const printNewRound = () => {
-      board.printBoard();
-      console.log(`${getActivePlayer().name}'s turn.`);
+        board.printBoard();
+        textToShow = `${getActivePlayer().name}'s turn`;
     };
 
     const checkEmpty = (row,column) => {
@@ -130,20 +133,19 @@ const GameController = (function() {
 
     const playRound = (row,column) => {
         if (checkEmpty(row,column)) {
-            board.dropToken(row, column, getActivePlayer().token);
-            turn ++
+            if (gameEnd == 0) {
+                board.dropToken(row, column, getActivePlayer().token);
+                turn ++
+            }
             if (gameEnd != 0) {
-                board.initBoard()
-                gameEnd = 0;
-                activePlayer = players[0];
-                turn = 0
+                console.log("ici")
             }
             else if (checkWin()) {
-                console.log (`${getActivePlayer().name} wins !`)
+                textToShow = `${getActivePlayer().name} wins !`
                 board.printBoard()
             }
             else if (turn >=9 ){
-                console.log("It's a draw!")
+                textToShow = "It's a draw!"
                 board.printBoard()
                 gameEnd = "Null";
             }
@@ -152,10 +154,20 @@ const GameController = (function() {
                 printNewRound();
             }
         }
-        else {
-            console.log("You can't play here!")
+        else if (gameEnd == 0) {
+            textToShow = "You can't play here!"
         }
     };
+
+    const textToShowOnScreen = () => textToShow
+
+    const resetButton =() => {
+        board.initBoard()
+        gameEnd = 0;
+        activePlayer = players[0];
+        turn = 0
+        textToShow = `${getActivePlayer().name}'s turn`;
+    }
 
     printNewRound();
   
@@ -163,7 +175,9 @@ const GameController = (function() {
       playRound,
       getActivePlayer,
       getBoard: board.getBoard,
-      checkWin
+      checkWin,
+      textToShowOnScreen,
+      resetButton
     };
 
 })()
@@ -173,22 +187,14 @@ const GameController = (function() {
 
 const ScreenController = (function() {
     const game = GameController;
-    const playerTurnDiv = document.querySelector(".turn");
+    const resetButton = document.querySelector(".button");
+    const textTurn = document.querySelector(".text");
     const boardDiv = document.querySelector(".board");
 
     const updateScreen = () => {
         boardDiv.textContent = "";
         const board = game.getBoard();
-        const activePlayer = game.getActivePlayer();
-        let textTurnDiv = `${activePlayer.name}'s turn`
-        if (game.checkWin()){
-            textTurnDiv = `${activePlayer.name} Wins!`
-        }
-        playerTurnDiv.textContent = textTurnDiv;
-        const resetButton = document.createElement("button");
-        resetButton.classList.add("reset");
-        resetButton.textContent = "Restart"
-        playerTurnDiv.appendChild(resetButton);
+        textTurn.textContent = game.textToShowOnScreen();
 
         board.forEach((row, indexRow) => {
             row.forEach((cell, index) => { 
@@ -221,12 +227,13 @@ const ScreenController = (function() {
     }
 
     function initButton() {
-        GameBoard.initBoard();
+        game.resetButton();
         updateScreen();
     }
 
+    resetButton.addEventListener("click", initButton);
     boardDiv.addEventListener("click", clickHandlerBoard);
-    playerTurnDiv.addEventListener("click", initButton);
+    
 
     // Initial render
     updateScreen();
